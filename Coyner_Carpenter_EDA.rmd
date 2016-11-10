@@ -9,18 +9,50 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-**NOTE:** Our dataset contained collapsed variables. Luckily, we were able to access the original dataset (of which our dataset was a follow-up) and cross-reference the collapsed variables.
+```{r Load Packages, echo = FALSE}
+suppressMessages(library(haven))
+suppressMessages(library(tidyverse))
+suppressMessages(library(sas7bdat))
+suppressMessages(library(doBy))
+suppressMessages(library(scales))
+suppressMessages(library(reshape2))
+suppressMessages(library(plyr))
+
+```
+
+# Setup & Initial Cleaning
+
+```{r Load_Data}
+#Loading datasets from local copies
+NSCHdata_raw <- data.frame(read_sas("/Users/scarpenter/Programming/R/StatisticsProject/nsdata_adhd_puf_u.sas7bdat"))
+crossRefData <- data.frame(read_sas("/Users/scarpenter/Programming/R/StatisticsProject/nsch_2011_2012_puf.sas7bdat"))
+NSCHdata <- merge(NSCHdata_raw, crossRefData, by = 'IDNUMR')
+```
+
+```{r ManipulateDataFrame}
+#Create new dataframe (play with)
+ADHData_clean <- NSCHdata_raw
+#Create new data column containing age broken down by groups
+ADHData_clean$ADHD_A1_AGEGROUPS <- cut(ADHData_clean$ADHD_A1_AGE_STD, breaks=c(0,5,14),labels=c("0-5","6-15"))
+#Create new data column that groups 'Person first concerned with child...' into 3 groups (Family member, School/daycare, other)
+ADHData_clean$ADHD_A1_4_GROUPS <- cut(ADHData_clean$ADHD_A1_4, breaks=c(0,1,3,6),labels=c("Family Member","School/Daycare","Other"))
+
+```
+
+
+Since we divided up the work, we ended up adjusting/cleaning the original data set in our own way.  Aaron was able to track down additional data the effectivley opened up a group that had been collapsed in the original data set.  I adjusted the data by adding additional columns/factors to prepare the data for plotting using *ggplot2()* and other tools. We were both able to replicate similar numbers to what was presented in the study. However, there are some differences between our calculations and the original work as well as differences between ourselves due to our slightly different data cleaning practices.  We will have to reconcile these and will probably end up using a combination of techniques that we each came up with. 
+
+**NOTE:** Our dataset contained collapsed variables. Apparently it was "to protect the identity of those in one of the groups". Luckily, we were able to access the original dataset (of which our dataset was a follow-up) and cross-reference the collapsed variables. The fact that a group was intentionally collapsed, but remained publically available in another data set is quite puzzling. 
 
 # Figure 1  
 
-![The age of the child when the parent was first told that the child had ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig1.png)  
+## Original 
+
+![The age of the child when the parent was first told that the child had ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure1.png)  
+
+## Replication
 
 ```{r Figure 1}
-library(haven)
-NSCHdata <- data.frame(read_sas("/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/nsdata_adhd_puf_u.sas7bdat"))
-crossRefData <- data.frame(read_sas("/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/nsch_2011_2012_puf.sas7bdat"))
-NSCHdata <- merge(NSCHdata, crossRefData, by = 'IDNUMR')
-
 # Subset the data
 fig1data <- subset(NSCHdata, AGEYR_CHILD >= 2 & AGEYR_CHILD <= 15, select = ADHD_A1_AGE_STD)
 
@@ -45,28 +77,67 @@ fig1 <- pie(slices, labels = pieLabels, init.angle = 175, clockwise = T, col = c
 
 # Figure 2  
 
-![The individual whom was first concerned about the child's behavior, attention, or performance, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig2.png)  
+## Original 
+
+![The individual whom was first concerned about the child's behavior, attention, or performance, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure2.png)  
+
+\pagebreak  
+
+
+## Replication Attempts
 
 ```{r Figure 2}
-# CODE HERE
+#Simple percentage 
+ggplot(ADHData_clean, aes(x=as.factor(ADHD_A1_4_GROUPS))) +
+  geom_bar(aes(y = (..count..)/sum(..count..)), na.rm = TRUE) +
+  labs(y = "Percent", x = "Individual first concerned")
+
 ```
 
+This simple percentage barplot basically replicates the 'All Children diagnosed with ADHD' as seen in the original Figure 2 (dark red). Below is one attempt, of oh so very many, to plot out each group using *position = "dodge"* as well as various other techniques using *aes()*.  
+
+```{r Figure2b}
+ggplot(ADHData_clean, aes(x=as.factor(ADHD_A1_4_GROUPS))) +
+  geom_bar(position = "dodge",aes(y = (..count..)/sum(..count..), fill = ADHD_A1_AGEGROUPS), na.rm = TRUE) +
+  labs(y = "Percent", x = "Individual first concerned")
+```
+
+This figure still needs to be adjusted considerably.  The first issue to address is the percentage values.  The percentages are shown of each age groups contribution to the whole, not within their group. 
 
 \pagebreak  
 
 # Figure 3  
 
-![The type of health care provider that first told the parent that their child had ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig3.png)  
+## Original 
+
+![The type of health care provider that first told the parent that their child had ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure3.png)  
+
+## Replication Attempt
 
 ```{r Figure 3}
-# CODE HERE
+#This is one of the harder plots to replicate. 
+
+#example: http://stackoverflow.com/questions/16051363/how-to-plot-stacked-proportional-graph
+x <- data.frame(id=letters[1:3],val0=1:3,val1=4:6,val2=7:9)
+xlong <- plyr::ddply(melt(x, id.vars = 'id'), .(id), mutate, prop = value / sum(value))
+ggplot(xlong, aes(x = id, y = prop, fill = variable)) + geom_bar(stat = 'identity')
+
+
 ```
+
+The plot created here is an exercise that I worked on to learn how to replicate the type of plot featured in Figure 4. In order to replicate the figure, we'll need to *gather()* our data into long format to use the featured code.  This has posed challenging as the plot is of percentages of each category within the age bracket. This has made plotting the data challenging for two main reasons: calculating percentages of long format data is not immediately intuitive, and many of *ggplot2()'s* built in tools (e.g. facet, facet_wrap) are not set up to show percentages within each subcategory.  
+ 
+
+
 
 \pagebreak  
 
 # Figure 4  
+## Original
 
-![The methods used to asses the child for ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig4.png)  
+![The methods used to asses the child for ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure4.png)  
+
+## Replication
 
 ```{r Figure 4}
 # Subset the data
@@ -132,11 +203,14 @@ text(fig4, barData4, labels=barData4, pos=3, cex=0.75)
 ```
 
 
-\pagebreak  
+
 
 # Figure 5  
+## Original
 
-![The individuals from whom information was collected to assess the child for ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig5.png)  
+![The individuals from whom information was collected to assess the child for ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure5.png) 
+
+## Replication
 
 ```{r Figure 5}
 # Subset the data
