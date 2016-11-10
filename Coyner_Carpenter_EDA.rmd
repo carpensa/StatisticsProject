@@ -128,8 +128,6 @@ ggplot(ADHData_clean, aes(x=as.factor(ADHD_A1_4_GROUPS))) +
 
 This figure still needs to be adjusted considerably.  The first issue to address is the percentage values.  The percentages are shown of each age groups contribution to the whole, not within their group. 
 
-  
-
 ## Figure 3  
 
 ### Original 
@@ -150,11 +148,6 @@ ggplot(xlong, aes(x = id, y = prop, fill = variable)) + geom_bar(stat = 'identit
 ```
 
 The plot created here is an exercise that I worked on to learn how to replicate the type of plot featured in Figure 4. In order to replicate the figure, we'll need to *gather()* our data into long format to use the featured code.  This has posed challenging as the plot is of percentages of each category within the age bracket. This has made plotting the data challenging for two main reasons: calculating percentages of long format data is not immediately intuitive, and many of *ggplot2()'s* built in tools (e.g. facet, facet_wrap) are not set up to show percentages within each subcategory.  
- 
-
-
-
-  
 
 ## Figure 4  
 ### Original
@@ -225,9 +218,6 @@ fig4legend <- legend('top', c('All children diagnosed with ADHD', 'Diagnosed at 
                      cex=0.75, bty='n', ncol=3, inset=c(0,-0.15), fill=barCols, border=barCols)
 text(fig4, barData4, labels=barData4, pos=3, cex=0.75)
 ```
-
-
-
 
 ## Figure 5  
 ### Original
