@@ -24,14 +24,14 @@ suppressMessages(library(plyr))
 
 ```{r Load_Data}
 #Loading datasets from local copies
-NSCHdata_raw <- data.frame(read_sas("/Users/scarpenter/Programming/R/StatisticsProject/nsdata_adhd_puf_u.sas7bdat"))
-crossRefData <- data.frame(read_sas("/Users/scarpenter/Programming/R/StatisticsProject/nsch_2011_2012_puf.sas7bdat"))
+NSCHdata_raw <- data.frame(read_sas("/Users/scarpenter/Programming/R/StatisticsProject/DataSources/nsdata_adhd_puf_u.sas7bdat"))
+crossRefData <- data.frame(read_sas("/Users/scarpenter/Programming/R/StatisticsProject/DataSources/nsch_2011_2012_puf.sas7bdat"))
 NSCHdata <- merge(NSCHdata_raw, crossRefData, by = 'IDNUMR')
 ```
 
 ```{r ManipulateDataFrame}
 #Create new dataframe (play with)
-ADHData_clean <- NSCHdata_raw
+ADHData_clean <- NSCHdata_raw %>% filter(!is.na(ADHD_A1_AGE_STD))
 #Create new data column containing age broken down by groups
 ADHData_clean$ADHD_A1_AGEGROUPS <- cut(ADHData_clean$ADHD_A1_AGE_STD, breaks=c(0,5,14),labels=c("0-5","6-15"))
 #Create new data column that groups 'Person first concerned with child...' into 3 groups (Family member, School/daycare, other)
@@ -40,17 +40,41 @@ ADHData_clean$ADHD_A1_4_GROUPS <- cut(ADHData_clean$ADHD_A1_4, breaks=c(0,1,3,6)
 ```
 
 
-Since we divided up the work, we ended up adjusting/cleaning the original data set in our own way.  Aaron was able to track down additional data the effectivley opened up a group that had been collapsed in the original data set.  I adjusted the data by adding additional columns/factors to prepare the data for plotting using *ggplot2()* and other tools. We were both able to replicate similar numbers to what was presented in the study. However, there are some differences between our calculations and the original work as well as differences between ourselves due to our slightly different data cleaning practices.  We will have to reconcile these and will probably end up using a combination of techniques that we each came up with. 
+```{r MissingValues, echo = FALSE}
+#Count how many NAs there are in newly created columns
+count(is.na(ADHData_clean$ADHD_A1_AGEGROUPS)  == TRUE)
+count(is.na(ADHData_clean$ADHD_A1_4_GROUPS)  == TRUE)
+
+```
+
+Our data was provided in wide format, very very wide, with over 200 columns of entries.  This limited the utility of standard funcitons such as *glimpse()* and *summary()*, because there were simply too many factors to read through.  Additionally, most of the data was coded, so we had to rely heavily on the data dictionary in order to decipher the entries. 
+
+```{r AssessingDataQuality, eval = FALSE}
+#Pulling out Provider type to compare to information in data dictionary
+Dx_provider_type <- count(ADHData, factor(ADHData$ADHD_A1_1_NEW))
+Dx_provider_type$percent <- round((Dx_provider_type$n)/sum(Dx_provider_type$n), digits = 2)
+
+#Using summaryby command to take a look at age levels
+summaryBy(ADHD_A1_1_NEW ~ ADHD_A1_AGE_STD, data=ADHData)
+
+#Count of each Practitionar Type 
+ADHData_clean  %>% 
+  group_by(factor(ADHD_A1_1_NEW))  %>% 
+  summarise(no_rows = length(factor(ADHD_A1_1_NEW)))
+```
+
+
+Since we divided up the work, we ended up adjusting/cleaning the original data set in our way.  Aaron was able to track down additional data that effectivley opened up a group that had been collapsed in the original data set.  I adjusted the data by adding additional columns/factors to prepare the data for plotting using *ggplot2()* and other tools. We were both able to replicate similar numbers compared to what was presented in the study. However, there are some differences between our calculations and the original work as well as differences between ourselves due to our slightly different data cleaning practices.  We will have to reconcile these and will probably end up using a combination of techniques that we each came up with. 
 
 **NOTE:** Our dataset contained collapsed variables. Apparently it was "to protect the identity of those in one of the groups". Luckily, we were able to access the original dataset (of which our dataset was a follow-up) and cross-reference the collapsed variables. The fact that a group was intentionally collapsed, but remained publically available in another data set is quite puzzling. 
 
-# Figure 1  
+## Figure 1  
 
-## Original 
+### Original 
 
 ![The age of the child when the parent was first told that the child had ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure1.png)  
 
-## Replication
+### Replication
 
 ```{r Figure 1}
 # Subset the data
@@ -73,18 +97,18 @@ fig1 <- pie(slices, labels = pieLabels, init.angle = 175, clockwise = T, col = c
 ```
 
 
-\pagebreak  
+  
 
-# Figure 2  
+## Figure 2  
 
-## Original 
+### Original 
 
 ![The individual whom was first concerned about the child's behavior, attention, or performance, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure2.png)  
 
-\pagebreak  
+  
 
 
-## Replication Attempts
+### Replication Attempts
 
 ```{r Figure 2}
 #Simple percentage 
@@ -104,15 +128,15 @@ ggplot(ADHData_clean, aes(x=as.factor(ADHD_A1_4_GROUPS))) +
 
 This figure still needs to be adjusted considerably.  The first issue to address is the percentage values.  The percentages are shown of each age groups contribution to the whole, not within their group. 
 
-\pagebreak  
+  
 
-# Figure 3  
+## Figure 3  
 
-## Original 
+### Original 
 
 ![The type of health care provider that first told the parent that their child had ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure3.png)  
 
-## Replication Attempt
+### Replication Attempt
 
 ```{r Figure 3}
 #This is one of the harder plots to replicate. 
@@ -130,14 +154,14 @@ The plot created here is an exercise that I worked on to learn how to replicate 
 
 
 
-\pagebreak  
+  
 
-# Figure 4  
-## Original
+## Figure 4  
+### Original
 
 ![The methods used to asses the child for ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure4.png)  
 
-## Replication
+### Replication
 
 ```{r Figure 4}
 # Subset the data
@@ -205,12 +229,12 @@ text(fig4, barData4, labels=barData4, pos=3, cex=0.75)
 
 
 
-# Figure 5  
-## Original
+## Figure 5  
+### Original
 
 ![The individuals from whom information was collected to assess the child for ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/scarpenter/Programming/R/StatisticsProject/Figures/Figure5.png) 
 
-## Replication
+### Replication
 
 ```{r Figure 5}
 # Subset the data
