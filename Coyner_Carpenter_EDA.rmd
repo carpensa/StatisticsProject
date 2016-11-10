@@ -1,0 +1,214 @@
+---
+title: "Exploratory Data Analysis"
+author: "Aaron Coyner and Sam Carpenter"
+date: "11/8/2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**NOTE:** Our dataset contained collapsed variables. Luckily, we were able to access the original dataset (of which our dataset was a follow-up) and cross-reference the collapsed variables.
+
+# Figure 1  
+
+![The age of the child when the parent was first told that the child had ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig1.png)  
+
+```{r Figure 1}
+library(haven)
+NSCHdata <- data.frame(read_sas("/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/nsdata_adhd_puf_u.sas7bdat"))
+crossRefData <- data.frame(read_sas("/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/nsch_2011_2012_puf.sas7bdat"))
+NSCHdata <- merge(NSCHdata, crossRefData, by = 'IDNUMR')
+
+# Subset the data
+fig1data <- subset(NSCHdata, AGEYR_CHILD >= 2 & AGEYR_CHILD <= 15, select = ADHD_A1_AGE_STD)
+
+over9 <- sum(fig1data$ADHD_A1_AGE_STD >= 9)/length(fig1data$ADHD_A1_AGE_STD)*100
+under4 <- sum(fig1data$ADHD_A1_AGE_STD <= 4)/length(fig1data$ADHD_A1_AGE_STD)*100
+age5 <- sum(fig1data$ADHD_A1_AGE_STD == 5)/length(fig1data$ADHD_A1_AGE_STD)*100
+age6 <- sum(fig1data$ADHD_A1_AGE_STD == 6)/length(fig1data$ADHD_A1_AGE_STD)*100
+age7<- sum(fig1data$ADHD_A1_AGE_STD == 7)/length(fig1data$ADHD_A1_AGE_STD)*100
+age8 <- sum(fig1data$ADHD_A1_AGE_STD == 8)/length(fig1data$ADHD_A1_AGE_STD)*100
+
+slices <- round(c(over9, under4, age5, age6, age7, age8), 1)
+colors <- c('lightsteelblue', 'brown4', 'pink4', 'rosybrown3', 'dodgerblue4', 'cornflowerblue')
+pieLabels <- c('Aged 9 years and over', 'Aged 4 years and under', 'Aged 5 years', 'Aged 6 years',
+               'Aged 7 years', 'Aged 8 years')
+pieLabels <- paste(pieLabels, slices)
+pieLabels <- paste(pieLabels,"%",sep="")
+fig1 <- pie(slices, labels = pieLabels, init.angle = 175, clockwise = T, col = colors)
+```
+
+
+\pagebreak  
+
+# Figure 2  
+
+![The individual whom was first concerned about the child's behavior, attention, or performance, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig2.png)  
+
+```{r Figure 2}
+# CODE HERE
+```
+
+
+\pagebreak  
+
+# Figure 3  
+
+![The type of health care provider that first told the parent that their child had ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig3.png)  
+
+```{r Figure 3}
+# CODE HERE
+```
+
+\pagebreak  
+
+# Figure 4  
+
+![The methods used to asses the child for ADHD, by age. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig4.png)  
+
+```{r Figure 4}
+# Subset the data
+fig4data <- subset(NSCHdata, AGEYR_CHILD >= 2 & AGEYR_CHILD <= 15 & ADHD_A2_2A <= 1 & ADHD_A2_2B <= 1 & ADHD_A2_2C <= 1
+                   & ADHD_A2_2D <= 1, select = c(ADHD_A1_AGE_STD,ADHD_A2_2A, ADHD_A2_2B,
+                                                 ADHD_A2_2C, ADHD_A2_2D, AGEYR_CHILD))
+
+# Create subset of whether or not a behavior rating scale was used for all ages, 0-5, and 6-15
+############NewDataFrame$newcolumn <- subset(OriginaDF, brackets)
+scaleUsed_allAges <- subset(fig4data, select = ADHD_A2_2A)
+scaleUsed_0_5 <- subset(fig4data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_2A)
+scaleUsed_6_15 <- subset(fig4data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_2A)
+# Calculate percentage of scales used for each age range
+scalePercent_allAges <- sum(scaleUsed_allAges$ADHD_A2_2A)/length(scaleUsed_allAges$ADHD_A2_2A)*100
+scalePercent_0_5 <- sum(scaleUsed_0_5$ADHD_A2_2A)/length(scaleUsed_0_5$ADHD_A2_2A)*100
+scalePercent_6_15 <- sum(scaleUsed_6_15$ADHD_A2_2A)/length(scaleUsed_6_15$ADHD_A2_2A)*100
+scaleGroup <- c(scalePercent_allAges, scalePercent_0_5, scalePercent_6_15)
+
+# Create subset of whether or not a conversation with parent occurred for all ages, 0-5, and 6-15
+parentConv_allAges <- subset(fig4data, select = ADHD_A2_2B)
+parentConv_0_5 <- subset(fig4data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_2B)
+parentConv_6_15 <- subset(fig4data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_2B)
+# Calculate percentage of conversations that occurred for each age range
+convPercent_allAges <- sum(parentConv_allAges$ADHD_A2_2B)/length(parentConv_allAges$ADHD_A2_2B)*100
+convPercent_0_5 <- sum(parentConv_0_5$ADHD_A2_2B)/length(parentConv_0_5$ADHD_A2_2B)*100
+convPercent_6_15 <- sum(parentConv_6_15$ADHD_A2_2B)/length(parentConv_6_15$ADHD_A2_2B)*100
+convGroup <- c(convPercent_allAges, convPercent_0_5, convPercent_6_15)
+
+# Create subset of whether or not a neurological test was performed for all ages, 0-5, and 6-15
+neuroTest_allAges <- subset(fig4data, select = ADHD_A2_2C)
+neuroTest_0_5 <- subset(fig4data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_2C)
+neuroTest_6_15 <- subset(fig4data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_2C)
+# Calculate percentage of neurological tests performed for each age range
+neuroPercent_allAges <- sum(neuroTest_allAges$ADHD_A2_2C)/length(neuroTest_allAges$ADHD_A2_2C)*100
+neuroPercent_0_5 <- sum(neuroTest_0_5$ADHD_A2_2C)/length(neuroTest_0_5$ADHD_A2_2C)*100
+neuroPercent_6_15 <- sum(neuroTest_6_15$ADHD_A2_2C)/length(neuroTest_6_15$ADHD_A2_2C)*100
+neuroGroup <- c(neuroPercent_allAges, neuroPercent_0_5, neuroPercent_6_15)
+
+# Create subset of whether or not imaging tests were performed for all ages, 0-5, and 6-15
+imgTest_allAges <- subset(fig4data, select = ADHD_A2_2D)
+imgTest_0_5 <- subset(fig4data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_2D)
+imgTest_6_15 <- subset(fig4data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_2D)
+# Calculate percentage of imaging tests performed for each age range
+imgPercent_allAges <- sum(imgTest_allAges$ADHD_A2_2D)/length(imgTest_allAges$ADHD_A2_2D)*100
+imgPercent_0_5 <- sum(imgTest_0_5$ADHD_A2_2D)/length(imgTest_0_5$ADHD_A2_2D)*100
+imgPercent_6_15 <- sum(imgTest_6_15$ADHD_A2_2D)/length(imgTest_6_15$ADHD_A2_2D)*100
+imgGroup <- c(imgPercent_allAges, imgPercent_0_5, imgPercent_6_15)
+
+# Create bar graph for Figure 4
+fig4xlabels <- c('Behavior rating\nscale or checklist', 'Conversation with\nparent about behavior',
+             'Neuropsychological\ntesting', 'Neurological imaging\nor laboratory tests')
+barCols <- c('brown4', 'lightpink4', 'rosybrown3')
+par(xpd = TRUE, las=1)
+barData4 <- (round(cbind(scaleGroup, convGroup, neuroGroup, imgGroup), 1))
+fig4 <- barplot(barData4, beside=TRUE, names.arg=fig4xlabels, ylim=c(0,110), cex.axis=0.75,
+                cex.names=0.75, col=barCols, border=NA, tck=0.03, ylab='Percent')
+axis(1, at=c(0.5,16.5), labels=F, tck=0)
+
+
+fig4legend <- legend('top', c('All children diagnosed with ADHD', 'Diagnosed at ages 0-5','Diagnosed at ages 6-15'),
+                     cex=0.75, bty='n', ncol=3, inset=c(0,-0.15), fill=barCols, border=barCols)
+text(fig4, barData4, labels=barData4, pos=3, cex=0.75)
+```
+
+
+\pagebreak  
+
+# Figure 5  
+
+![The individuals from whom information was collected to assess the child for ADHD. Data is for children who were between the ages of 2 and 15 when the interview occurred, a subset of the original data.](/Users/Aaron/Box Sync/School/MATH 630/Final Project/EDA/fig5.png)  
+
+```{r Figure 5}
+# Subset the data
+fig5data <- subset(NSCHdata, AGEYR_CHILD >= 2 & AGEYR_CHILD <= 15 & ADHD_A2_3A <= 1 & ADHD_A2_3B <= 1 & ADHD_A2_3C <= 1
+                   & ADHD_A2_3D <= 1 & ADHD_A2_3E <= 1, select = 
+                     c(ADHD_A1_AGE_STD, ADHD_A2_3A, ADHD_A2_3B, ADHD_A2_3C, ADHD_A2_3D,
+                       ADHD_A2_3E, AGEYR_CHILD))
+
+# Create subset for info collected from child for all ages, 0-5, and 6-15
+child_allAges <- subset(fig5data,select = ADHD_A2_3A)
+child_0_5 <- subset(fig5data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_3A)
+child_6_15 <- subset(fig5data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_3A)
+# Calculate percentage for each age range
+childPercent_allAges <- sum(child_allAges$ADHD_A2_3A)/length(child_allAges$ADHD_A2_3A)*100
+childPercent_0_5 <- sum(child_0_5$ADHD_A2_3A)/length(child_0_5$ADHD_A2_3A)*100
+childPercent_6_15 <- sum(child_6_15$ADHD_A2_3A)/length(child_6_15$ADHD_A2_3A)*100
+childGroup <- c(childPercent_allAges, childPercent_0_5, childPercent_6_15)
+
+# Create subset for info collected from teachers for all ages, 0-5, and 6-15
+teachers_allAges <- subset(fig5data, select = ADHD_A2_3C)
+teachers_0_5 <- subset(fig5data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_3C)
+teachers_6_15 <- subset(fig5data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_3C)
+# Calculate percentage for each age range
+teachPercent_allAges <- sum(teachers_allAges$ADHD_A2_3C)/length(teachers_allAges$ADHD_A2_3C)*100
+teachPercent_0_5 <- sum(teachers_0_5$ADHD_A2_3C)/length(teachers_0_5$ADHD_A2_3C)*100
+teachPercent_6_15 <- sum(teachers_6_15$ADHD_A2_3C)/length(teachers_6_15$ADHD_A2_3C)*100
+teacherGroup <- c(teachPercent_allAges, teachPercent_0_5, teachPercent_6_15)
+
+# Create subset info collected from care providers for all ages, 0-5, and 6-15
+ccPrvdr_allAges <- subset(fig5data, select = ADHD_A2_3D)
+ccPrvdr_0_5 <- subset(fig5data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_3D)
+ccPrvdr_6_15 <- subset(fig5data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_3D)
+# Calculate percentage for each age range
+prvdrPercent_allAges <- sum(ccPrvdr_allAges$ADHD_A2_3D)/length(ccPrvdr_allAges$ADHD_A2_3D)*100
+prvdrPercent_0_5 <- sum(ccPrvdr_0_5$ADHD_A2_3D)/length(ccPrvdr_0_5$ADHD_A2_3D)*100
+prvdrPercent_6_15 <- sum(ccPrvdr_6_15$ADHD_A2_3D)/length(ccPrvdr_6_15$ADHD_A2_3D)*100
+prvdrGroup <- c(prvdrPercent_allAges, prvdrPercent_0_5, prvdrPercent_6_15)
+
+# Create subset for 'other' for all ages, 0-5, and 6-15
+other_allAges <- subset(fig5data, select = ADHD_A2_3E)
+other_0_5 <- subset(fig5data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_3E)
+other_6_15 <- subset(fig5data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_3E)
+# Calculate percentage for each age range
+otherPercent_allAges <- sum(other_allAges$ADHD_A2_3E)/length(other_allAges$ADHD_A2_3E)*100
+otherPercent_0_5 <- sum(other_0_5$ADHD_A2_3E)/length(other_0_5$ADHD_A2_3E)*100
+otherPercent_6_15 <- sum(other_6_15$ADHD_A2_3E)/length(other_6_15$ADHD_A2_3E)*100
+otherGroup <- c(otherPercent_allAges, otherPercent_0_5, otherPercent_6_15)
+
+# Create subset info collected from family members for all ages, 0-5, and 6-15
+family_allAges <- subset(fig5data, select = ADHD_A2_3B)
+family_0_5 <- subset(fig5data, ADHD_A1_AGE_STD <= 5, select = ADHD_A2_3B)
+family_6_15 <- subset(fig5data, ADHD_A1_AGE_STD >= 6 & ADHD_A1_AGE_STD <= 14, select = ADHD_A2_3B)
+# Calculate percentage for each age range
+familyPercent_allAges <- sum(family_allAges$ADHD_A2_3B)/length(family_allAges$ADHD_A2_3B)*100
+familyPercent_0_5 <- sum(family_0_5$ADHD_A2_3B)/length(family_0_5$ADHD_A2_3B)*100
+familyPercent_6_15 <- sum(family_6_15$ADHD_A2_3B)/length(family_6_15$ADHD_A2_3B)*100
+familyGroup <- c(familyPercent_allAges, familyPercent_0_5, familyPercent_6_15)
+
+
+# Create bar graph for Figure 5
+fig5xlabels <- c('Child', 'Teachers or\nschool staff', 'Childcare\nproviders',
+                 'Other community\nmembers', 'At least one adult\noutside the family')
+barCols <- c('brown4', 'lightpink4', 'rosybrown3')
+par(xpd = TRUE, las=1, lend=1)
+barData5 <- (round(cbind(childGroup, teacherGroup, prvdrGroup, otherGroup, familyGroup), 1))
+fig5 <- barplot(barData5, beside=TRUE, names.arg=fig5xlabels, ylim=c(0,110), cex.axis=0.75,
+                cex.names=0.75, col=barCols, border=NA, tck=0.03, ylab='Percent')
+
+axis(1, at=c(0.5,20.5), labels=F, tck=0)
+
+fig5legend <- legend('top', c('All children diagnosed with ADHD', 'Diagnosed at ages 0-5','Diagnosed at ages 6-15'),
+                     cex=0.75, bty='n', ncol=3, inset=c(0,-0.15), col=barCols, lty=1, lwd=10)
+text(fig5, barData5, labels=barData5, pos=3, cex=0.75)
+```
+
