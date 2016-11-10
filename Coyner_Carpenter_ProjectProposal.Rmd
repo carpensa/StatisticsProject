@@ -1,0 +1,45 @@
+---
+title: "Project Proposal"
+author: "Aaron Coyner and Sam Carpenter"
+date: "10/21/2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Citation Information
+Visser SN, Zablotsky B, Holbrook JR, et al. Diagnostic experiences of children with  attention-deficit/hyperactivity disorder. National health statistics reports; no 81. 
+Hyattsville, MD: National Center for Health Statistics. 2015.
+
+
+## Direct Link to Paper
+
+http://www.cdc.gov/nchs/data/nhsr/nhsr081.pdf
+
+## Direct Link to Data
+Data hosted at:
+http://www.cdc.gov/nchs/slaits/ns_data.htm
+
+Direct Link:
+ftp://ftp.cdc.gov/pub/Health_Statistics/NCHS/slaits/ns_data/nsdata_adhd_puf_u.zip
+
+## Descriptive Statistics and Plots
+* Figure 1: Pie chart of age of child when parent was first told that child had ADHD.
+* FIgure 2: Bar chart of the first individual who noticed symptoms of ADHD and the age of diagnosis.
+* Figure 3: Stacked bar chart showing proportions of type of healthcare provider that told parent the child had ADHD and age of diagnosis.
+* Figure 4: Bar chart of children with ADHD, grouped by age, of methods used to diagnose ADHD.
+* Figure 5: Bar chart of children with ADHD, grouped by age, of individuals from whom information was collected to assess child for ADHD.
+
+## Types of Analyses Performed
+* Bivariate logistic regression
+* $p < 0.05$
+
+## Additional Plot Ideas
+* A plot of severity of ADHD versus age of diagnosis.
+* Plot of ADHD severity versus persistance of diagnosis.
+* Proportions of ADHD where diagnosis was changed to another disorder.
+* Plot severity of disorder vs type of medication (or when they started taking medication)
+* Bar chart of chidren with ADHD that received treatment vs those that did not.
+* Of those diagnosed with ADHD, but that did not receive treatment, bar chart of barriers to treatment.
