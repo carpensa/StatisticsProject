@@ -20,6 +20,10 @@ suppressMessages(library(plyr))
 
 ```
 
+## Version Control
+
+This file is available as [Github Repository](https://github.com/carpensa/StatisticsProject.git)
+
 # Setup & Initial Cleaning
 
 ```{r Load_Data}
